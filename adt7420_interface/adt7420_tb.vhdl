@@ -48,7 +48,7 @@ BEGIN
     PROCESS
     BEGIN
     --Start
-       WAIT FOR 360 ns; -- First slave address bit should now be on bus
+       WAIT FOR 460 ns; -- First slave address bit should now be on bus
        ASSERT tb_ADT7420_SDA = '1'
        REPORT "First slave address wrong"
        SEVERITY ERROR;
@@ -70,11 +70,13 @@ BEGIN
 	   
 	   WAIT FOR 800 ns; -- make all LSBs zero
 	   tb_ADT7420_SDA <= '0';
-	   
-	   WAIT FOR 1000 ns; -- wait until transfer done
+	   WAIT FOR 900 ns;
+	   tb_ADT7420_SDA <= 'Z';
+	   WAIT FOR 100 ns; -- wait until transfer done
 	   ASSERT tb_temp =  "1111111100000000"
        REPORT "Temp wrong"
        SEVERITY ERROR;
+	   WAIT FOR 2000 ns; --do not rerun test since timing will be off
 	END PROCESS;
 	   
 END;

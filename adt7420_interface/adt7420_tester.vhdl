@@ -39,6 +39,7 @@ BEGIN
 	-- Use BTNU as the reset signal
     reset_n <= NOT BTNU;
 	
+	
 END;
 
 	
