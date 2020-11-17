@@ -9,7 +9,9 @@ ENTITY adt7420_tester IS
     CLK100MHZ : IN STD_LOGIC;                    -- Clock input
 	LED	: OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
 	TMP_SCL : OUT STD_LOGIC;
-	TMP_SDA : INOUT STD_LOGIC
+	TMP_SDA : INOUT STD_LOGIC;
+	JA1 : OUT STD_LOGIC;
+	JA2 : OUT STD_LOGIC
 	);
 END adt7420_tester;
 
@@ -26,6 +28,7 @@ ARCHITECTURE ett OF adt7420_tester IS
 	);
 	END COMPONENT;
 	SIGNAL reset_n: STD_LOGIC;
+	SIGNAL SDA, SCL : STD_LOGIC;
 BEGIN
 	DUT : COMPONENT ADT7420 PORT MAP(
 	clk        => CLK100MHZ,
@@ -33,11 +36,15 @@ BEGIN
 	temp       => LED,       
 	sample_temp=> BTNC,
 	sample_done=> OPEN,
-	ADT7420_SDA=> TMP_SDA,
-	ADT7420_SCL=> TMP_SCL
+	ADT7420_SDA=> SDA,
+	ADT7420_SCL=> SCL
 	);
 	-- Use BTNU as the reset signal
     reset_n <= NOT BTNU;
+	JA1 <= SCL;
+	TMP_SCL <= SCL;
+	JA2 <=  SDA;
+	TMP_SDA <= SDA;
 	
 	
 END;
