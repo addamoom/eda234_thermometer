@@ -14,7 +14,8 @@ component temp_sens is
         temp : out STD_LOGIC_VECTOR (12 downto 0); -- 13 bit vector
         SDA : inout STD_LOGIC;
         SCL : out STD_LOGIC;
-        counter_out : out integer
+        counter_period_out : out integer;
+        counter_data_out : out integer
         );   
 end component;
 signal CLK_tb : STD_LOGIC := '0';
@@ -22,7 +23,7 @@ signal RESET_N_tb : STD_LOGIC;
 signal SDA_tb : STD_LOGIC;
 signal SCL_tb : STD_LOGIC;
 signal temp_out_tb : std_logic_vector(12 downto 0);
-signal counter_out_tb : integer;
+signal counter_period_out_tb, counter_data_out_tb : integer;
 begin
 
     UUT : component temp_sens 
@@ -32,7 +33,8 @@ begin
             temp => temp_out_tb,
             SDA => SDA_tb,
             SCL => SCL_tb,
-            counter_out => counter_out_tb
+            counter_period_out => counter_period_out_tb,
+            counter_data_out => counter_data_out_tb
         );
 
     RESET_N_tb <= '0',
@@ -42,7 +44,7 @@ begin
     
     test_proc : process
     begin
-        wait for 600 ns;
+        wait for 15 ms;
         report "RUNNING";
 
         ASSERT false report "END of test" severity FAILURE;
