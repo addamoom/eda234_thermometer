@@ -49,6 +49,7 @@ signal ACK_bit : STD_LOGIC;
 
 begin
 
+    temp <= data_reg (15 downto 3); -- Not the 3 lowest bits
     -- One clock cycle 4 pulses in a 10 khz signal => T = 4 * 100 us = 400 us
     --                   __                        __
     --  ________________/  \______________________/  \_______________
