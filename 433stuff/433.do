@@ -10,6 +10,9 @@ sim:/tb_w433_interface/DUT/sample_done \
 sim:/tb_w433_interface/DUT/clock_counter \
 sim:/tb_w433_interface/DUT/bit_counter \
 sim:/tb_w433_interface/DUT/Receiver_state \
-sim:/tb_w433_interface/DUT/temp_reg
+sim:/tb_w433_interface/DUT/temp_reg \
+sim:/tb_w433_interface/DUT/key_reg \
+sim:/tb_w433_interface/DUT/PSK
 
-run 100000ns
+
+run 250ms

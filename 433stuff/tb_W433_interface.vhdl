@@ -34,31 +34,48 @@ BEGIN
     );
     clk_proc : PROCESS
     BEGIN
-        WAIT FOR 1 ns;
+        WAIT FOR 5 us;
         tb_Clk_10us <= NOT(tb_Clk_10us);
     END PROCESS clk_proc;
 
+    -- Transmit "1 1101 1010111100000001"
     test_proc :
     PROCESS
     BEGIN
         --Start-- 
         tb_Reset_n <= '0';
-        WAIT FOR 1 ns; 
+        tb_data_in <= '0';
+        WAIT FOR 50 us; 
         tb_Reset_n <= '1';
-        WAIT FOR 5 ns; 
-        tb_data_in <= '1';
-        WAIT FOR 5000 ns;
+
+        
+        WAIT FOR 50 us; 
+        tb_data_in <= '1'; --Start bit
+
+        WAIT FOR 10000 us; 
+        tb_data_in <= '1'; -- First key bit
+        WAIT FOR 20000 us; 
+        tb_data_in <= '0'; 
+        WAIT FOR 10000 us;
+        tb_data_in <= '1'; -- Last key bit
+
+        WAIT FOR 10000 us; 
+        tb_data_in <= '1'; -- First  msg bit
+        WAIT FOR 10000 us;
         tb_data_in <= '0';
-        WAIT FOR 5000 ns;
-        tb_data_in <= '1';
-        WAIT FOR 5000 ns;
+        WAIT FOR 10000 us; 
+        tb_data_in <= '1'; 
+        WAIT FOR 10000 us;
         tb_data_in <= '0';
-        WAIT FOR 20000 ns;
+        WAIT FOR 10000 us; 
         tb_data_in <= '1';
-        WAIT FOR 10000 ns;
+        WAIT FOR 40000 us; 
         tb_data_in <= '0';
-        WAIT FOR 5000 ns;
-        tb_data_in <= '1';
-        WAIT FOR 100000 ns;
+        WAIT FOR 70000 us; 
+        tb_data_in <= '1'; -- last  msg bit
+        WAIT FOR 10000 us;
+        tb_data_in <= '0'; -- Should not end up in the message
+
+        WAIT FOR 100000 us; -- Want
     END PROCESS;
 END;
