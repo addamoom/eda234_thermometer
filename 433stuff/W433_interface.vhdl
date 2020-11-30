@@ -51,10 +51,13 @@ BEGIN
                 WHEN wait_for_zero => --We want to find a posetive edge, so first we have to wait for zero
                 IF data_in = '0' THEN
                     Receiver_state <= wait_for_start;
+                    bit_counter    <= 0;
+                    clock_counter  <= 0;
                 END IF;
                 WHEN wait_for_start => --Find a high edge of the data pin
                     IF data_in = '1' THEN
                         Receiver_state <= delay_for_skew;
+                        sample_done    <= '0';
                     END IF;
                 WHEN delay_for_skew => -- Wait a few cycles so that we are not right on the edge of the transmission, to protect against skew.
                     clock_counter <= clock_counter + 1;
@@ -70,17 +73,15 @@ BEGIN
                     END IF;
                 WHEN Receive_bit =>      -- Store a bit into the appropriate register and goto the wait state again
                     IF bit_counter = 20 THEN                -- Transmission over
-                        Receiver_state <= wait_for_start;
-                        bit_counter    <= 0;
-                        clock_counter  <= 0;
+                        Receiver_state <= wait_for_zero;
                         sample_done    <= '1';
                         Temp_out       <= temp_reg;
                     ELSE                                    -- Transmission still active
                         IF bit_counter < 4 THEN                    --the first 4 bits is the key
-                            key_reg <= key_reg(2 DOWNTO 0) & data_in;
+                            key_reg(3-bit_counter) <= data_in;
                             Receiver_state            <= wait_10_ms;
-                            IF (bit_counter = 3) and ((data_in & key_reg(2 downto 0)) /= PSK) THEN
-                                Receiver_state <= wait_for_start;
+                            IF (bit_counter = 3) and ((key_reg(3 downto 1) & data_in ) /= PSK) THEN
+                                Receiver_state <= wait_for_zero;   
                             END IF;
                         ELSE -- recived bit 4 - 19 is the 16 bit message
                             temp_reg(19-bit_counter) <= data_in;

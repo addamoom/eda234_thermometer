@@ -15,4 +15,4 @@ sim:/tb_w433_interface/DUT/key_reg \
 sim:/tb_w433_interface/DUT/PSK
 
 
-run 250ms
+run 550 ms

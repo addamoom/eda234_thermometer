@@ -48,7 +48,7 @@ BEGIN
         WAIT FOR 50 us; 
         tb_Reset_n <= '1';
 
-        
+        -- Start transsmiting a correct message
         WAIT FOR 50 us; 
         tb_data_in <= '1'; --Start bit
 
@@ -75,6 +75,46 @@ BEGIN
         tb_data_in <= '1'; -- last  msg bit
         WAIT FOR 10000 us;
         tb_data_in <= '0'; -- Should not end up in the message
+
+        --send message with faulty key
+        WAIT FOR 10000 us; 
+        tb_data_in <= '1'; --Start bit
+        WAIT FOR 10000 us; 
+        tb_data_in <= '0'; -- First key bit
+        WAIT FOR 20000 us; 
+        tb_data_in <= '0'; 
+        WAIT FOR 10000 us;
+        tb_data_in <= '1'; -- Last key bit
+        WAIT FOR 10000 us;
+        tb_data_in <= '0'; 
+
+        -- send another correct message
+        WAIT FOR 20000 us; 
+        tb_data_in <= '1'; --Start bit
+
+        WAIT FOR 10000 us; 
+        tb_data_in <= '1'; -- First key bit
+        WAIT FOR 20000 us; 
+        tb_data_in <= '0'; 
+        WAIT FOR 10000 us;
+        tb_data_in <= '1'; -- Last key bit
+
+        WAIT FOR 10000 us; 
+        tb_data_in <= '0'; -- First  msg bit
+        WAIT FOR 10000 us;
+        tb_data_in <= '0';
+        WAIT FOR 10000 us; 
+        tb_data_in <= '1'; 
+        WAIT FOR 10000 us;
+        tb_data_in <= '0';
+        WAIT FOR 10000 us; 
+        tb_data_in <= '0';
+        WAIT FOR 40000 us; 
+        tb_data_in <= '1';
+        WAIT FOR 70000 us; 
+        tb_data_in <= '1'; -- last  msg bit
+        WAIT FOR 10000 us;
+        tb_data_in <= '0'; 
 
         WAIT FOR 100000 us; -- Want
     END PROCESS;
