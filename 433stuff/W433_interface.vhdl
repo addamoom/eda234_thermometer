@@ -61,13 +61,13 @@ BEGIN
                     END IF;
                 WHEN delay_for_skew => -- Wait a few cycles so that we are not right on the edge of the transmission, to protect against skew.
                     clock_counter <= clock_counter + 1;
-                    IF clock_counter = 100 THEN
+                    IF clock_counter = 10 THEN
                         Receiver_state <= wait_10_ms;
                         clock_counter  <= 0;
                     END IF;
                 WHEN wait_10_ms => -- Wait 10 ms for the next bit
                     clock_counter <= clock_counter + 1;
-                    IF clock_counter = 1000 THEN
+                    IF clock_counter = 100 THEN
                         Receiver_state <= Receive_bit;
                         clock_counter  <= 0;
                     END IF;
@@ -83,7 +83,7 @@ BEGIN
                             IF (bit_counter = 3) and ((key_reg(3 downto 1) & data_in ) /= PSK) THEN
                                 Receiver_state <= wait_for_zero;   
                             END IF;
-                        ELSE -- recived bit 4 - 19 is the 16 bit message
+                        ELSE -- received bit 4 - 19 is the 16 bit message
                             temp_reg(19-bit_counter) <= data_in;
                             Receiver_state            <= wait_10_ms;
                         END IF;

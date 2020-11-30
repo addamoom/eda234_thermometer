@@ -31,15 +31,15 @@ ARCHITECTURE ett OF W433_interface_tester IS
         );
     END COMPONENT freq_divisor;
 
-    SIGNAL Reset_n  : STD_LOGIC;
+    SIGNAL Reset_n, sample_done  : STD_LOGIC;
     SIGNAL Clk_10us : STD_LOGIC;
     SIGNAL Temp_out : STD_LOGIC_VECTOR(15 DOWNTO 0);
 BEGIN
 
     Reset_n <= NOT BTNU;
-    LED <= Temp_out;
+    LED <= sample_done & JB1 & Temp_out(13 DOWNTO 0);
 
-    d100khz : freq_divisor GENERIC MAP(N => 1000) --1000 on actual hardware, 1 for simulation with testbench 
+    d100khz : freq_divisor GENERIC MAP(N => 1000)  
     PORT MAP
     (
         clk     => CLK100MHZ,
@@ -54,6 +54,6 @@ BEGIN
         get_sample  => '0',
         data_in     => JB1,
         Temp_out    => Temp_out,
-        sample_done => OPEN
+        sample_done => sample_done
     );
 END;
