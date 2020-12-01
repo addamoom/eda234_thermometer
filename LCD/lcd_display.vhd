@@ -7,14 +7,13 @@ USE  IEEE.STD_LOGIC_UNSIGNED.all;
 ENTITY LCD_DISPLAY_nty IS
    
    PORT( 
-      reset              : IN     std_logic;  -- Map this Port to a Switch within your [Port Declarations / Pin Planer]  
-      clk                : IN     std_logic;  -- Using the DE2 50Mhz Clk, in order to Genreate the 400Hz signal... clk_count_400hz reset count value must be set to:  <= x"0F424" (62500)   x"07A12"--- (31250) for 100Mhz 
+      reset              : IN     std_logic;  
+      clk                : IN     std_logic;  -- in order to Genreate the 400Hz signal... clk_count_400hz reset count value must be set to:  <= x"0F424" (62500)   x"1E848"--- (125000), x"3D090" ---(250000) for 100Mhz 
       
       lcd_rs             : OUT    std_logic;
       lcd_e              : OUT    std_logic;
       lcd_rw             : OUT    std_logic;   
-      lcd_on             : OUT    std_logic; --lcd contrast
-      lcd_blon           : OUT    std_logic; --lcd backlight
+
       
       data_bus_0         : INOUT  STD_LOGIC;
       data_bus_1         : INOUT  STD_LOGIC;
@@ -211,11 +210,9 @@ data_bus_7 <= data_bus(7);
 
  lcd_display_string_01 <= 
   (
--- Line 1    B    l     u     e    t      o     o     t     h          L      i     n     k 
-          x"42",x"6C",x"75",x"65",x"74",x"6F",x"6F",x"74",x"68",x"20",x"4C",x"69",x"6E",x"6B",x"20",x"20"
+-- Line 1   H      E     N    G                             h     E     Z      H     E     B    O     C
+          x"68",x"65",x"6E",x"67",x"20",x"20",x"20",x"20",x"68",x"65",x"7A",x"68",x"65",x"62",x"6F",x"63"
    
--- Line 2   ->    D      I    S      C     O     N     N      E    C      T    E     D
---          x"7E",x"44",x"49",x"53",x"43",x"4F",x"4E",x"4E",x"45",x"43",x"54",x"45",x"44",x"20",x"20",x"20" 
    );
 -------------------------------------------------------------------------------------------------------
 -- BIDIRECTIONAL TRI STATE LCD DATA BUS
@@ -233,7 +230,6 @@ data_bus_7 <= data_bus(7);
 ------------------------------------ STATE MACHINE FOR LCD SCREEN MESSAGE SELECT -----------------------------
 ---------------------------------------------------------------------------------------------------------------
   
--- get next character in display string based on the LCD_CHAR_ARRAY (switches or Multiplexer)
 
           
           -- Bluetooth Disconnected
@@ -252,7 +248,7 @@ begin
             clk_count_400hz <= x"00000";
             clk_400hz_enable <= '0';
          else
-            if (clk_count_400hz <= x"00014") then             
+            if (clk_count_400hz <= x"0F424") then         -- C96A8=> 120Hz    1E848---800HZ for half clock 
                    clk_count_400hz <= clk_count_400hz + 1;                                   
                    clk_400hz_enable <= '0';                
             else
@@ -327,7 +323,7 @@ begin
                             lcd_e <= '1';
                             lcd_rs <= '0';
                             lcd_rw_int <= '0';
-                            data_bus_value <= x"38";  -- **Set Function to 8-bit transfer
+                            data_bus_value <= x"38";  -- **Set Function to 8-bit transfer, 2-line display
                             state <= drop_lcd_e;
                             next_command <= display_off;
                             
@@ -414,16 +410,20 @@ begin
                           
                           
                             -- Loop to send out 16 characters to LCD Display (16 by 2 lines)
-                               if (char_count < 15) AND (next_char /= x"fefe") then
-                                   char_count <= char_count +1; 
-				   next_command <= print_string;                            
+                               --if (char_count < 15) AND (next_char /= x"fe") then
+                               if (char_count < 15) then
+                                   char_count <= char_count +1;                           
                                else
                                    char_count <= "0000";
                                end if;
-                  
-                                     
+                               
+                               -- Jump to second line?
+                               if char_count = 7 then 
+                                  next_command <= line2;
+                                 
                             -- Return to first line?
-                               if (char_count = 15) or (next_char = x"fe") then
+                              -- elsif (char_count = 15) or (next_char = x"fe") then
+                              elsif (char_count = 15)  then
                                      next_command <= return_home;
                                else
                                      next_command <= print_string; 
@@ -433,11 +433,21 @@ begin
                      
                        -- Return write address to first character position on line 1
                        --=========================================================--
-                       when return_home =>
+                                              -- Set write address to line 2 character 1
+                       --======================================--
+                       when line2 =>
                             lcd_e <= '1';
                             lcd_rs <= '0';
                             lcd_rw_int <= '0';
                             data_bus_value <= x"80";
+                            state <= drop_lcd_e;
+                            next_command <= print_string; 
+                            
+                       when return_home =>
+                            lcd_e <= '1';
+                            lcd_rs <= '0';
+                            lcd_rw_int <= '0';
+                            data_bus_value <= x"c0";
                             state <= drop_lcd_e;
                             next_command <= print_string; 
                     
@@ -448,18 +458,12 @@ begin
                        --============================================================================--
                        when drop_lcd_e =>
                             lcd_e <= '0';
-							lcd_on   <= '1';
-							lcd_blon <= '1';
                             state <= hold;
                    
                        -- Hold LCD inst/data valid after falling edge of E line
                        --====================================================--
                        when hold =>
-                            state <= next_command;
-							lcd_on   <= '1';
-							lcd_blon <= '1';
-		       when others =>         
-			    state <=  display_off;   --?            
+                            state <= next_command;     
 		
 		end case;
 
@@ -473,3 +477,5 @@ begin
 end process;                                                            
   
 END ARCHITECTURE LCD_DISPLAY_arch;
+
+
