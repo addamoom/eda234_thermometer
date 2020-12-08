@@ -26,7 +26,7 @@ function ASCII_to_HEXDISP (
 	begin
 		case ascii_in is
 			when x"41" | x"61" => hex_out := "10001000"; -- A a
-            when x"42" | x"62" | x"32" => hex_out := "10000000"; -- B b 8
+            when x"42" | x"62" => hex_out := "10000000"; -- B b 8
             when x"43" | x"63" => hex_out := "11000110"; -- C c
             when x"44" | x"64" => hex_out := "11100000"; -- D d
             when x"45" | x"65" => hex_out := "10000110"; -- E e
