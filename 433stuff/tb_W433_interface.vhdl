@@ -12,7 +12,7 @@ ARCHITECTURE ett OF tb_W433_interface IS
             Reset_n     : IN STD_LOGIC;
             get_sample  : IN STD_LOGIC;
             data_in     : IN STD_LOGIC;
-            Temp_out    : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
+            Temp_out    : OUT STD_LOGIC_VECTOR(20 DOWNTO 0);
             sample_done : OUT STD_LOGIC
         );
     END COMPONENT;
@@ -21,7 +21,7 @@ ARCHITECTURE ett OF tb_W433_interface IS
     SIGNAL tb_Reset_n     : STD_LOGIC;
     SIGNAL tb_get_sample  : STD_LOGIC;
     SIGNAL tb_data_in     : STD_LOGIC;
-    SIGNAL tb_Temp_out    : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL tb_Temp_out    : STD_LOGIC_VECTOR(20 DOWNTO 0);
     SIGNAL tb_sample_done : STD_LOGIC;
 BEGIN
     DUT : COMPONENT W433_interface PORT MAP(
@@ -38,6 +38,7 @@ BEGIN
         tb_Clk_10us <= NOT(tb_Clk_10us);
     END PROCESS clk_proc;
 
+    -- OBS! outdated since lenght change!
     -- Transmit "1 1101 1010111100000001"
     test_proc :
     PROCESS

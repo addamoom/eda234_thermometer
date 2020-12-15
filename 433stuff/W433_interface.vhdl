@@ -7,37 +7,38 @@
 --      The transaction is initialized by sending a 1.
 --      The one is followed by a key, that is used to filter out transmissions and noise on the 433Mhz band not meant for this device
 --      The key is 4 bits long, set to "1101"
---      After the key the 16 bit message is received.
+--      After the key the 20 bit message is received. message has the form: "sddd.dd" s - sign, d - 4 bit digit, . just signifies whre to put the . in the final number
 --      A typical transmission may therefore look something like this:
---      "111010000000000000001"
+--      "11101000000000000000100000"
 --       |start bit
 --        |  |key
 --            |              |message
 --            
--- The message is  expected to be a 16 bit 2 complement integer representing the current temperature
+-- T
 --     
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 
 ENTITY W433_interface IS
     PORT (
-        Clk_10us    : IN STD_LOGIC;
-        Reset_n     : IN STD_LOGIC;
-        get_sample  : IN STD_LOGIC;
-        data_in     : IN STD_LOGIC;
-        Temp_out    : OUT STD_LOGIC_VECTOR(15 DOWNTO 0);
-        sample_done : OUT STD_LOGIC
+        Clk_10us    : IN STD_LOGIC;         -- 100 khz clock
+        Reset_n     : IN STD_LOGIC;         -- Active low reset
+        get_sample  : IN STD_LOGIC;         -- Not currently in use, placeholder for later
+        data_in     : IN STD_LOGIC;         -- 433 receeiver data pin
+        Temp_out    : OUT STD_LOGIC_VECTOR(20 DOWNTO 0); --Latest received temperature
+        sample_done : OUT STD_LOGIC         -- Is low when the sensor is receiving a new sample, will be used later with get_sample
     );
 END W433_interface;
 ARCHITECTURE ett OF W433_interface IS
 
     SIGNAL clock_counter : INTEGER RANGE 0 TO 1023;
-    SIGNAL bit_counter : INTEGER RANGE 0 TO 20;
+    SIGNAL bit_counter : INTEGER RANGE 0 TO 25;
     TYPE Receiver_states IS (wait_for_start, wait_1_ms, Receive_bit, delay_for_skew,wait_for_zero);
     SIGNAL Receiver_state : Receiver_states;
-    SIGNAL temp_reg       : STD_LOGIC_VECTOR(15 DOWNTO 0);
+    SIGNAL temp_reg       : STD_LOGIC_VECTOR(20 DOWNTO 0);
     SIGNAL key_reg        : STD_LOGIC_VECTOR(3 DOWNTO 0);
     CONSTANT PSK          : STD_LOGIC_VECTOR(3 DOWNTO 0) := "1101";
+    
 BEGIN
 
     receiver : PROCESS (Clk_10us, Reset_n)
@@ -72,7 +73,7 @@ BEGIN
                         clock_counter  <= 0;
                     END IF;
                 WHEN Receive_bit =>      -- Store a bit into the appropriate register and goto the wait state again
-                    IF bit_counter = 20 THEN                -- Transmission over
+                    IF bit_counter = 25 THEN                -- Transmission over
                         Receiver_state <= wait_for_zero;
                         sample_done    <= '1';
                         Temp_out       <= temp_reg;
@@ -84,7 +85,7 @@ BEGIN
                                 Receiver_state <= wait_for_zero;   
                             END IF;
                         ELSE -- received bit 4 - 19 is the 16 bit message
-                            temp_reg(19-bit_counter) <= data_in;
+                            temp_reg(24-bit_counter) <= data_in;
                             Receiver_state            <= wait_1_ms;
                         END IF;
                         bit_counter               <= bit_counter + 1;
