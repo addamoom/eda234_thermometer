@@ -3,6 +3,7 @@ USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.STD_LOGIC_ARITH.ALL;
 USE IEEE.STD_LOGIC_UNSIGNED.ALL;
 
+
 ENTITY toplevel IS
     PORT (
 
@@ -32,7 +33,7 @@ END toplevel;
 
 ARCHITECTURE arc_toplevel OF toplevel IS
 
-    SIGNAL temp_indoor,temp_outdoor,temp_to_lcd,Temp_out_433 : STD_LOGIC_VECTOR (20 DOWNTO 0); --connect to decimal component and LCD component
+    SIGNAL temp_indoor,temp_outdoor,temp_to_lcd,Temp_out_433 : STD_LOGIC_VECTOR (20 DOWNTO 0); 
     SIGNAL temp_indoor_raw : STD_LOGIC_VECTOR (12 DOWNTO 0);
 
     SIGNAL Reset_n,Clk_10us : STD_LOGIC;
@@ -54,7 +55,7 @@ ARCHITECTURE arc_toplevel OF toplevel IS
         GENERIC (N : NATURAL := 4);
         PORT (
             reset      : IN STD_LOGIC;
-            clk        : IN STD_LOGIC; -- in order to Genreate the 400Hz signal... clk_count_400hz reset count value must be set to:  <= x"0F424" (62500)   x"1E848"--- (125000), x"3D090" ---(250000) for 100Mhz 
+            clk        : IN STD_LOGIC; 
             input_d    : IN STD_LOGIC_VECTOR(20 DOWNTO 0);
 
             lcd_rs     : OUT STD_LOGIC;
@@ -174,11 +175,5 @@ BEGIN
         Toggle           => BTNR,
         Temp_to_lcd      => temp_to_lcd
     );
-
-
-
-
-
-
 
 END arc_toplevel;
