@@ -16,6 +16,11 @@ ENTITY LCD_DISPLAY_nty IS
       lcd_e              : OUT    std_logic;
       lcd_rw             : OUT    std_logic;   
       
+      flag_max_out       : out    std_logic;
+      flag_min_out       : out    std_logic;
+      
+      no_veto            : in     std_logic;
+      copy               : out    std_logic;
       
       data_bus_0         : INOUT  STD_LOGIC;
       data_bus_1         : INOUT  STD_LOGIC;
@@ -54,17 +59,20 @@ ARCHITECTURE LCD_DISPLAY_arch OF LCD_DISPLAY_nty IS
   signal clk_count_400hz             : STD_LOGIC_VECTOR(19 downto 0); 
   signal char_count                  : STD_LOGIC_VECTOR(3 downto 0);--16 characters totally, 4bits
   signal clk_400hz_enable,lcd_rw_int : std_logic; 
-  signal data_bus                    : STD_LOGIC_VECTOR(7 downto 0);	
+  signal data_bus                    : STD_LOGIC_VECTOR(7 downto 0);
+  signal input_d_signal              : std_logic_vector(20 downto 0);	
   
-  signal temp_max					 : std_logic_vector(20 downto 0):= "001011001100100010000"; --599.10 temp as the initial value for max/min register
+  signal temp_max					 : std_logic_vector(20 downto 0):= "101011001100100010000"; --599.10 temp as the initial value for max/min register
   signal temp_min					 : std_logic_vector(20 downto 0):= "001011001100100010000";
   
 
   signal flag_max					 : std_logic:='0';
   signal flag_min					 : std_logic:='0';
   
-  signal sign_ascii_max                  : std_logic_vector(7 downto 0);
-  signal sign_ascii_min                  : std_logic_vector(7 downto 0);
+  signal sign_ascii_max              : std_logic_vector(7 downto 0);
+  signal sign_ascii_min              : std_logic_vector(7 downto 0);
+  signal counter                     :  integer range 0 to 9999999;
+ -- signal copy_signal                 : std_logic:='0';
 
   
 
@@ -120,47 +128,83 @@ BEGIN
 --===================================================--    
 
 
+input_d_signal <= input_d;
+flag_max_out <= flag_max;
+flag_min_out <= flag_min;
+
+
 compare_max: get_max
   port map (
-		clk =>clk,
+		clk =>clk_400hz_enable,
 		max_register => temp_max,
-		current_data => input_d,
+		current_data => input_d_signal,
 		flag_max=> flag_max);
 					
 compare_min: get_min
   port map (
-		clk =>clk,
+		clk =>clk_400hz_enable,
 		min_register => temp_min,
-		current_data_min => input_d,
+		current_data_min => input_d_signal,
 		flag_min=> flag_min);
 
-  process(clk)
+  process(clk_400hz_enable)
+  variable copy_signal: integer range 0 to 1;
   begin
-  if(rising_edge(clk)) then
-	if ((temp_max = "001011001100100010000") and (temp_min = "001011001100100010000"))then
-		temp_max <= input_d;
-		temp_min <= input_d;
+  
 
-    else
+  
 
-		if (flag_max ='1') then
-				temp_max <= input_d;
+  if (rising_edge(clk_400hz_enable)) then
+
+if (reset='1') then
+  if (copy_signal=1) then
+    copy <= '0';
+    copy_signal := 0;
+  else
+    copy <= '1';
+    copy_signal :=1;
+  end if ;
+  
+	--if ((temp_max = "001011001100100010000") and (temp_min = "001011001100100010000"))then                     -- 599.10
+	--	temp_max <= "101011001100100010000";
+	--	temp_min <= "001011001100100010000";
+
+ --   else
+    if (no_veto = '1') then
+		if (flag_max = '1') then
+				temp_max <= input_d_signal;
 		else
 				temp_max <= temp_max;
 		end if;
 		
 		if (flag_min ='1') then
-				temp_min <= input_d;
-				
+				temp_min <= input_d_signal;				
 		else 
 				temp_min <= temp_min;
 				
-		end if;		
+		end if;	
+	end if;
+	
+	else
+	temp_max <= "101011001100100010000";
+	temp_min <= "001011001100100010000";
+	end if;
     end if;
-  end if;
 end process;
 
 
+--process(clk_400hz_enable)
+--begin
+
+--if (rising_edge(clk_400hz_enable)) then
+--       if (flag_max = '1') then
+--                 counter <= counter + 1;
+--         else
+--                 counter <= 0;
+--       end if;
+--end if;
+
+--end process;
 
 
 
@@ -173,12 +217,12 @@ end process;
 --===================================================-- 
 
 G0:  for i in 0 to N generate
-    temp_digit_decimal(i) <= input_d((4*i)+3 downto 4*i);
+    temp_digit_decimal(i) <= input_d_signal((4*i)+3 downto 4*i);
      decimal_2_ascii_proc: decimal_2_ascii
 	PORT MAP(
 		  input_d =>temp_digit_decimal(i),
 		  output_a =>temp_digit_ascii(i),
-                  clk=> clk);
+                  clk=> clk_400hz_enable);
 
 end generate;
 
@@ -195,7 +239,7 @@ G1:  for i in 0 to N generate
 	PORT MAP(
 		  input_d =>temp_digit_decimal_max(i),
 		  output_a =>temp_digit_ascii_max(i),
-                  clk=> clk);
+                  clk=> clk_400hz_enable);
 
 end generate;
 
@@ -211,7 +255,7 @@ G2:  for i in 0 to N generate
 	PORT MAP(
 		  input_d =>temp_digit_decimal_min(i),
 		  output_a =>temp_digit_ascii_min(i),
-                  clk=> clk);
+                  clk=> clk_400hz_enable);
 
 end generate;
 
@@ -429,18 +473,19 @@ sign_ascii_min<= x"20" when temp_min(20)='0' else
 process(clk)
 begin
       if (rising_edge(clk)) then
-         if (reset = '0') then
-            clk_count_400hz <= x"00000";
-            clk_400hz_enable <= '0';
-         else
-            if (clk_count_400hz <= x"00014") then         -- correct count number for LCD display: x"0F424"
+    --     if (reset = '0') then
+     --       clk_count_400hz <= x"00000";
+      --      clk_400hz_enable <= '0';
+
+         --else
+            if (clk_count_400hz <= x"0F424") then         -- correct count number for LCD display: x"0F424"; x"00014" for testbench using
                    clk_count_400hz <= clk_count_400hz + 1;                                   
                    clk_400hz_enable <= '0';                
             else
                    clk_count_400hz <= x"00000";
                    clk_400hz_enable <= '1';
             end if;
-         end if;
+       --  end if;
       end if;
 end process;  
 
@@ -452,17 +497,19 @@ process (clk, reset)
 begin
  
   
-        if reset = '0' then
+  
+        
+    
+    
+        if(rising_edge(clk)) then
+	      if reset = '0' then
            state <= reset1;
            data_bus_value <= x"01"; -- RESET
            next_command <= reset2;
            lcd_e <= '1';
            lcd_rs <= '0';
            lcd_rw_int <= '0';  
-        
-    
-    
-        elsif rising_edge(clk) then
+	else
              if clk_400hz_enable = '1' then  
                  
  
@@ -623,6 +670,7 @@ begin
                             state <= next_command;     
 		
 		end case;
+end if;
       end if;
 end if;
 end process;                                                            

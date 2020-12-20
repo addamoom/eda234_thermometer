@@ -3,11 +3,11 @@ USE  IEEE.STD_LOGIC_1164.all;
 USE  IEEE.STD_LOGIC_ARITH.all;
 USE  IEEE.STD_LOGIC_UNSIGNED.all;
 
-ENTITY lcd_display_tb IS
+ENTITY max_min_tb IS
 
-END lcd_display_tb;
+END max_min_tb;
 
-ARCHITECTURE arc_lcd_display_tb OF lcd_display_tb IS
+ARCHITECTURE arch OF max_min_tb IS
   COMPONENT LCD_DISPLAY_nty IS
 
    
@@ -85,16 +85,19 @@ BEGIN
 --                       "000000100000100100001" after 1340 ns,  --- +041.21
 --                       "101010100001100001001" after 1540 ns;  --- -43.09
 
-input_d_signal <= "000000010001000110001",  ---22.3
-		  "000000010000100100001" after 120 ns,  --- +021.2
-		  "000000010001100110001" after 220 ns,  --- +023.3
-		  "000000010010001010001" after 320 ns,  --- +024.5
-		  "000000011000000110001" after 420 ns,  --- +030.3
-		  "000000011000101100001" after 520 ns,  --- +031.6
-		  "000000011001001110001" after 620 ns,  --- +032.7
-		  "000000010000100100001" after 720 ns,  --- +021.2
-		  "000000010001100010001" after 820 ns,  --- +023.1
-		  "000000010000000000001" after 920 ns;  --- +020.0
+input_d_signal <= "000000010001000110001",               --- +022.31
+		  "000000010000100100001" after 120 ns,  --- +021.21
+		  "000000010001100110001" after 220 ns,  --- +023.31
+		  "000000010010001010001" after 320 ns,  --- +024.51
+		  "000000011000000110001" after 420 ns,  --- +030.31
+		  "100000011000000010001" after 520 ns,  --- -030.11
+		  "000000011000101100001" after 620 ns,  --- +031.61
+		  "000000011000000110001" after 720 ns,  --- +030.31
+		  "000000011001001110001" after 820 ns,  --- +032.71
+		  "100000001000000010001" after 920 ns,  --- -010.11
+		  "000000010000100100001" after 1020 ns,  --- +021.21
+		  "000000010001100010001" after 1120 ns,  --- +023.11
+		  "000000010000000000001" after 1220 ns;  --- +020.01
    clk_proc:
    PROCESS
    BEGIN
@@ -104,4 +107,4 @@ input_d_signal <= "000000010001000110001",  ---22.3
 
 
 
-END arc_lcd_display_tb;
+END arch;
