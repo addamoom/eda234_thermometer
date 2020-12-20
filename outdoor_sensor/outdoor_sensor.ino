@@ -49,7 +49,7 @@ void transmit(String data) {
   for (int i = 0; i < data.length(); i++) {
     if (data[i]=='0') {
       //Serial.print(data[i]);
-      delayMicroseconds(length_of_bit);
+      delayMicroseconds(length_of_bit-5);
     }
     else {
       //Serial.print(data[i]);
@@ -59,13 +59,14 @@ void transmit(String data) {
 }
 
 void send_carrier_wave(long duration, long wave_period){
-  long periods = duration/wave_period;
+  //long periods = duration/wave_period;
+  int periods = 10; 
   //Serial.print(periods);
   for(int i = 0; i < periods; i++) {
     digitalWrite(outpin, HIGH);
-    delayMicroseconds(wave_period/2);
+    delayMicroseconds(48);
     digitalWrite(outpin, LOW);
-    delayMicroseconds(wave_period/2);
+    delayMicroseconds(48);
   }
 }
 
