@@ -31,7 +31,6 @@ ENTITY LCD_DISPLAY_nty IS
 
 END LCD_DISPLAY_nty ;
 
-
 ARCHITECTURE LCD_DISPLAY_arch OF LCD_DISPLAY_nty IS
   type character_string is array ( 0 to 15 ) of STD_LOGIC_VECTOR( 7 downto 0 );
   type input_digit is array ( 0 to 4 ) of STD_LOGIC_VECTOR( 3 downto 0 );
