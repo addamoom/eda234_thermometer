@@ -5,11 +5,13 @@ entity temp_sens is
     port (
         CLK : in STD_LOGIC; -- 100 Mhz clock
         RESET_N : in STD_LOGIC; 
-        temp : out STD_LOGIC_VECTOR (12 downto 0); -- 13 bit vector
+        temp : out STD-; -- 13 bit vector
         SDA : inout STD_LOGIC;
         SCL : out STD_LOGIC;
         counter_period_out : out integer; -- For debugging
-        counter_data_out : out integer
+        counter_data_out : out integer;
+        temp_select : in STD_LOGIC; -- When rising edge start.
+        temp_ready ; out STD_LOGIC; -- High when a value can be read. 
     );
 end temp_sens;
 
@@ -30,7 +32,8 @@ PORT (
 );
 END COMPONENT freq_divisor;
 type state_type is (
-    wait_to_start,
+    wait_on_select,
+    pre_start,
     do_a_start,
     write_dev_add_R,
     dev_ack_bit,
@@ -48,8 +51,6 @@ constant MSB_add : STD_LOGIC_VECTOR (7 downto 0) := x"00";
 signal ACK_bit : STD_LOGIC;
 
 begin
-
-    temp <= data_reg (15 downto 3); -- Not the 3 lowest bits
     -- One clock cycle 4 pulses in a 10 khz signal => T = 4 * 100 us = 400 us
     --                   __                        __
     --  ________________/  \______________________/  \_______________
@@ -61,6 +62,14 @@ begin
         clk_out => quarter_pulse
     );
 
+    wait_start_proc : process(temp_select) 
+    begin
+        if rising_edge(temp_select) then
+            state <= pre_start; -- start the reading
+            temp_ready <= '0'; -- Not OK to read temp data
+        end if;
+    end process wait_start_proc;
+
     read_proc : process (quarter_pulse)
     variable counter_period : integer := 0; -- counts a full period
     variable counter_data : integer;
@@ -68,10 +77,11 @@ begin
     begin  
         counter_period_out <= counter_period;
         counter_data_out <= counter_data;
-        if RESET_N = '0' then
-            state <= wait_to_start;
+        if RESET_N = '0'  then
+            state <= wait_on_select; -- State waiting for select.
             counter_period := 1;
             counter_data := 2; --
+            temp_ready <= '0'; -- Not OK to read temp data
         else 
             if rising_edge(quarter_pulse) then
                 -- Count, 1 falling edge, 3 rising edge of correct pulse
@@ -79,11 +89,10 @@ begin
                     counter_period := 1;
                     counter_data := counter_data - 1; -- MSB first!
                 else
-                    counter_period := counter_period + 1;
-                    
+                    counter_period := counter_period + 1; 
                 end if;
 
-                if (state /= do_a_start) and (state/=wait_to_start) then
+                if (state /= do_a_start) and (state/=pre_start) then
                     case counter_period is
                         when 1 | 2 => SCL <= '0';
                         when 3 | 4 => SCL <= '1';
@@ -92,7 +101,7 @@ begin
                 end if;
 
                 case state is
-                    when wait_to_start =>
+                    when pre_start =>
                         SCL <= '1';
                         SDA <= '1';
                         if counter_data = 0 and counter_period = 2 then
@@ -118,8 +127,7 @@ begin
                         case counter_period is
                             when 1 =>
                                 SDA <= dev_add_r(counter_data);
-                            when 2 =>
-                                
+                            when 2 => 
                                 if counter_data = 0 then
                                     SDA <= 'Z';
                                     state <= dev_ack_bit;
@@ -174,13 +182,17 @@ begin
                     when read_LSB_data =>
                         case counter_period is
                             when 1 => 
+                                if counter_data = 6 then
+                                    SDA <= '0'; -- Write ack-bit
+                                    state <= Finish;
+                                end if;
                                 SDA <= 'Z';
                             when 2 =>
                                 if counter_data = 7 then
                                     SDA <= 'Z';
                                 end if;
                                 if counter_data = -1 then
-                                    state <= wait_to_start;
+                                    state <= pre_start;
                                     counter_data := 2;
                                 end if;
                             when 3 =>
@@ -189,7 +201,10 @@ begin
                                 data_reg(counter_data) <= SDA;
                             when others =>
                         end case;
-                        
+                    
+                    when Finish =>
+                        temp <= data_reg (15 downto 3); -- Not the 3 lowest bits
+                        temp_ready <= '1'; -- Now okay to read temp data. 
                     when others =>
 
                 end case; -- state
