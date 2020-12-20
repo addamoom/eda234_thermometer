@@ -1,3 +1,6 @@
+-- This component debounces a button press and uses it to
+-- to toggle between outputting one of the two inputs.
+
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
 
