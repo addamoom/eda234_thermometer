@@ -25,7 +25,7 @@ BEGIN
         ELSIF rising_edge(Clk) THEN
             IF wait_for_debounce = '1' THEN
                 debounce_counter <= debounce_counter + 1;
-                IF debounce_counter = 20 THEN -- change to 2000000 in hardware
+                IF debounce_counter = 2000000 THEN -- change to 2000000 in hardware
                     wait_for_debounce <= '0';
                     debounce_counter  <= 0;
                 END IF;
