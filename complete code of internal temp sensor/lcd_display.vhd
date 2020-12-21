@@ -89,7 +89,7 @@ data_bus_5 <= data_bus(5);
 data_bus_6 <= data_bus(6);
 data_bus_7 <= data_bus(7);
 
- 
+
 -- ASCII hex values for LCD Display
 
 --   = x"20",

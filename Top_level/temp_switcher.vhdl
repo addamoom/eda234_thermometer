@@ -19,25 +19,32 @@ END temp_switcher;
 ARCHITECTURE ett OF temp_switcher IS
     SIGNAL debounce_counter : INTEGER RANGE 0 TO 2000001; -- Probably ugly to use such a huge counter, but it was quick
     SIGNAL internal_toggle, wait_for_debounce : STD_LOGIC;
+    TYPE states IS (wait_for_high, debounce, wait_for_low);
+    SIGNAL state : states;
 BEGIN
     proc_name : PROCESS (Clk, Reset_n)
     BEGIN
         IF Reset_n = '0' THEN
             internal_toggle  <= '0';
             debounce_counter <= 0;
+            state <= wait_for_high;
         ELSIF rising_edge(Clk) THEN
-            IF wait_for_debounce = '1' THEN
-                debounce_counter <= debounce_counter + 1;
-                IF debounce_counter = 2000000 THEN -- change to 2000000 in hardware
-                    wait_for_debounce <= '0';
-                    debounce_counter  <= 0;
-                END IF;
-            ELSE
-                IF Toggle = '1' then
-                    wait_for_debounce <= '1';
-                    internal_toggle <= NOT internal_toggle;
-                end if;
-            END IF;
+            case state is
+                when wait_for_high =>
+                    if Toggle = '1' then
+                      state <= debounce ;
+                      internal_toggle <= NOT internal_toggle;
+                    end if;
+                when debounce =>
+                    debounce_counter <= debounce_counter +1;
+                    if debounce_counter = 2000001 then
+                        state <= wait_for_low;
+                    end if;
+                when wait_for_low =>
+                    if Toggle = '0' then
+                    state <= wait_for_high;
+                    end if;
+            end case;       
         END IF;
     END PROCESS proc_name;
 
