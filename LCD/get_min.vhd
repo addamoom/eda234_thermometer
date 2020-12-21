@@ -1,3 +1,10 @@
+---------------------------------------------------------------------------------------
+------function: get two input (min_register and current_data),then compare them,-------
+----if current_data < min_register, then output flag_min = 1, otherwise flag_min = 0 --
+---------------------------------------------------------------------------------------
+
+
+
 LIBRARY IEEE;
 USE  IEEE.STD_LOGIC_1164.all;
 USE  IEEE.STD_LOGIC_ARITH.all;
@@ -9,7 +16,7 @@ port(
        clk                        : in std_logic;
        min_register               : in std_logic_vector(20 downto 0);
        current_data_min           : in std_logic_vector(20 downto 0);
-       flag_min                   : out std_logic);                -- when flag_max = 1, max_register <= current_data; when flag_max = 0, max_register <= max_register
+       flag_min                   : out std_logic);                -- when flag_min = 1, min_register <= current_data; when flag_min = 0, min_register <= min_register
 end get_min;
 
 
@@ -75,7 +82,7 @@ process(clk)
 variable enabled : integer range 0 to 1;
 begin
      if(rising_edge(clk)) then
-	if (enabled=1) then
+	if (enabled=1) then                                  -- reset the flag_max to 0 
 		flag_min <= '0';	
 		enabled:=0;
 	else

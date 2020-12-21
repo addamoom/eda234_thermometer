@@ -1,3 +1,9 @@
+---------------------------------------------------------------------------------------
+------function: get two input (max_register and current_data),then compare them,-------
+----if current_data > max_register, then output flag_max = 1, otherwise flag_max = 0 --
+---------------------------------------------------------------------------------------
+
+
 LIBRARY IEEE;
 USE  IEEE.STD_LOGIC_1164.all;
 USE  IEEE.STD_LOGIC_ARITH.all;
@@ -80,7 +86,7 @@ process(clk)
 variable enabled : integer range 0 to 1;
 begin
      if(rising_edge(clk)) then
-	if (enabled=1) then
+	if (enabled=1) then                  -- reset the flag_max to 0 
 		flag_max <= '0';	
 		enabled:=0;
 	else
