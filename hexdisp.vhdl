@@ -26,7 +26,7 @@ function ASCII_to_HEXDISP (
 	begin
 		case ascii_in is
 			when x"41" | x"61" => hex_out := "10001000"; -- A a
-            when x"42" | x"62" => hex_out := "10000000"; -- B b 8
+            when x"42" | x"62" | x"38" => hex_out := "10000000"; -- B b 8
             when x"43" | x"63" => hex_out := "11000110"; -- C c
             when x"44" | x"64" => hex_out := "11100000"; -- D d
             when x"45" | x"65" => hex_out := "10000110"; -- E e
@@ -51,10 +51,10 @@ function ASCII_to_HEXDISP (
             when x"58" | x"78" => hex_out := "10110110"; -- X x
             when x"59" | x"79" => hex_out := "10010101"; -- Y y
             when x"5A" | x"7A" | x"32" => hex_out := "10100100"; -- Z z 2
-            when x"31" => hex_out := "10000110"; -- 1
+            when x"31" => hex_out := "11111001"; -- 1
             when x"33" => hex_out := "10110000"; -- 3
-            when x"34" => hex_out := "10011000"; -- 4
-            when x"36" => hex_out := "10000011"; -- 6
+            when x"34" => hex_out := "10011001"; -- 4
+            when x"36" => hex_out := "10000010"; -- 6
             when x"37" => hex_out := "11111000"; -- 7
             when x"39" => hex_out := "10011000"; -- 9
             -- when x"" => hex_out := ""; --
@@ -63,16 +63,20 @@ function ASCII_to_HEXDISP (
 	return STD_LOGIC_VECTOR(hex_out);
 end function;
 
+
+signal disp_dot : STD_LOGIC_VECTOR(7 downto 0);
 begin
     
+    disp_dot <= ASCII_to_HEXDISP(ASCII(15 downto 8)); -- Make a dot!
+    
     -- Convert from ASCII to the coding of display
-    DISP(7 downto 0) <= ASCII_to_HEXDISP(ASCII(7 downto 0));
-    DISP(15 downto 8) <= ASCII_to_HEXDISP(ASCII(15 downto 8));
+    DISP(7 downto 0)   <= ASCII_to_HEXDISP(ASCII(7 downto 0));
+    DISP(15 downto 8)  <= '0' & disp_dot(6 downto 0); -- Make a dot!
     DISP(23 downto 16) <= ASCII_to_HEXDISP(ASCII(23 downto 16));
     DISP(31 downto 24) <= ASCII_to_HEXDISP(ASCII(31 downto 24));
     DISP(39 downto 32) <= ASCII_to_HEXDISP(ASCII(39 downto 32));
     DISP(47 downto 40) <= ASCII_to_HEXDISP(ASCII(47 downto 40));
-    DISP(55 downto 48) <= ASCII_to_HEXDISP(ASCII(55 downto 48));
+    DISP(55 downto 48) <= ASCII_to_HEXDISP(ASCII(55 downto 48)); 
     DISP(63 downto 56) <= ASCII_to_HEXDISP(ASCII(63 downto 56));
     
     
