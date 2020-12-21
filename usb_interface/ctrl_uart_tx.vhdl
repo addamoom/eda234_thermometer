@@ -48,6 +48,8 @@ begin
             end if;
             --index_bit <= 0; 
             --new_start := '1';
+
+            --index_bit <= 0;
         when LD_BIT =>
             --if new_start = '1' then
              --   index_bit <= 0;
@@ -67,7 +69,7 @@ begin
             ready <= '0';
             if (bitDone = '1') then -- keep 9600 baud rate
                 if index_bit = 9 then -- Last one, go back to rdy
-                    tx_state <= SD_LAST_BIT;
+                    tx_state <= RDY;--SD_LAST_BIT;
                 else
                     tx_state <= LD_BIT;
                 end if;
