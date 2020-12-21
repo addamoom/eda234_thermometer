@@ -34,10 +34,10 @@ use IEEE.STD_LOGIC_1164.ALL;
 entity sensor_to_chip is
    PORT( 
       clk                : IN     std_logic;
-      input_d            : IN     std_logic_vector(20 downto 0);
-      copy               : IN     std_logic;
-      output_d           : OUT     std_logic_vector(20 downto 0);
-      no_veto           : OUT     std_logic
+      input_d            : IN     std_logic_vector(20 downto 0); -- sensor input
+      copy               : IN     std_logic;                     -- functions as state machine clock from LCD code
+      output_d           : OUT     std_logic_vector(20 downto 0); -- copied input that will be static while checked and displayed until copy cycle complete
+      no_veto           : OUT     std_logic                      -- enable signal that is turned off during copying state for a fraction of LCD clock cycle
       );
 end sensor_to_chip;
 
@@ -56,7 +56,7 @@ if rising_edge(clk) then
 
 case state is
 
-    when copy_state =>
+    when copy_state => -- this is extremely ugly code but i don't know if a for loop would synthesize the same
         if(input_d(0)='1') then
             output_d(0) <= '1';
             else
@@ -169,14 +169,14 @@ case state is
     state <= inter;
     no_veto <= '1';
     when inter =>
-        if (copy='0') then
+        if (copy='0') then --wait for slowly changing "copy" signal from LCD to go down before proceeding
             state <= hold;
         end if;
     
     when hold =>
-        if (copy='1') then
+        if (copy='1') then --wait for copy signal from LCD to be set to 1 again before proceeding
             state <= copy_state;
-            no_veto <= '0';
+            no_veto <= '0'; -- set to 0 to veto check for min/max in LCD code while copying signal
         end if;
     end case;
 end if;
