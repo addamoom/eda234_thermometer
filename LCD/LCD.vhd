@@ -1,3 +1,7 @@
+----------------------------------------------------------------------------------------
+-- function: to display the current temp, and can be switched to display max/min temp---
+----------------------------------------------------------------------------------------
+
 LIBRARY IEEE;
 USE  IEEE.STD_LOGIC_1164.all;
 USE  IEEE.STD_LOGIC_ARITH.all;
@@ -8,21 +12,19 @@ ENTITY LCD_DISPLAY_nty IS
   generic(N: NATURAL :=4);   
    PORT( 
       reset              : IN     std_logic;  
-      clk                : IN     std_logic;  -- to Genreate the 400Hz signal, clk_count_400hz reset count value: x"0F424" (62500)   x"1E848"--- (125000), x"3D090" ---(250000) for 100Mhz 
-      input_d            : IN     std_logic_vector(20 downto 0);
-      switch_1           : IN     std_logic;          
+      clk                : IN     std_logic;             -- to Genreate the 400Hz signal, clk_count_400hz reset count value: x"0F424" (62500)   x"1E848"--- (125000), x"3D090" ---(250000) for 100Mhz 
+      input_d            : IN     std_logic_vector(20 downto 0);              -- input temp data
+      switch_1           : IN     std_logic;             --when switch_1 = 1, sdisplay the max/min temp
 
       lcd_rs             : OUT    std_logic;
       lcd_e              : OUT    std_logic;
       lcd_rw             : OUT    std_logic;   
       
-      flag_max_out       : out    std_logic;
-      flag_min_out       : out    std_logic;
       
-      no_veto            : in     std_logic;
-      copy               : out    std_logic;
+      no_veto            : in     std_logic;             -- enable signal from sensor_to_chip, that is turned off during copying state for a fraction of LCD clock cycle
+      copy               : out    std_logic;             -- control signal to sensor_to_chip, enable the sensor_to_chip to process next signal
       
-      data_bus_0         : INOUT  STD_LOGIC;
+      data_bus_0         : INOUT  STD_LOGIC;             --output databus
       data_bus_1         : INOUT  STD_LOGIC;
       data_bus_2         : INOUT  STD_LOGIC;
       data_bus_3         : INOUT  STD_LOGIC;
@@ -62,23 +64,21 @@ ARCHITECTURE LCD_DISPLAY_arch OF LCD_DISPLAY_nty IS
   signal data_bus                    : STD_LOGIC_VECTOR(7 downto 0);
   signal input_d_signal              : std_logic_vector(20 downto 0);	
   
-  signal temp_max					 : std_logic_vector(20 downto 0):= "101011001100100010000"; --599.10 temp as the initial value for max/min register
-  signal temp_min					 : std_logic_vector(20 downto 0):= "001011001100100010000";
+  signal temp_max					 : std_logic_vector(20 downto 0):= "101011001100100010000";    --  -599.10 temp as the initial value for max register
+  signal temp_min					 : std_logic_vector(20 downto 0):= "001011001100100010000";    --  +599.10 temp as the initial value for max register
   
-
-  signal flag_max					 : std_logic:='0';
-  signal flag_min					 : std_logic:='0';
+ 
+  signal flag_max					 : std_logic:='0';                             -- when flag is 1, then we update the max temp data
+  signal flag_min					 : std_logic:='0';                             -- when flag is 1, then we update the min temp data
   
-  signal sign_ascii_max              : std_logic_vector(7 downto 0);
-  signal sign_ascii_min              : std_logic_vector(7 downto 0);
-  signal counter                     :  integer range 0 to 9999999;
- -- signal copy_signal                 : std_logic:='0';
+  signal sign_ascii_max              : std_logic_vector(7 downto 0);               -- ascii format data of max temp's sign bit
+  signal sign_ascii_min              : std_logic_vector(7 downto 0);               -- ascii format data of min temp's sign bit
 
   
 
   
   
-  COMPONENT decimal_2_ascii IS
+  COMPONENT decimal_2_ascii IS                                                     -- convert decimal to ascii
    port( 
          input_d : in std_logic_vector(3 downto 0);
              clk : in std_logic;
@@ -86,7 +86,7 @@ ARCHITECTURE LCD_DISPLAY_arch OF LCD_DISPLAY_nty IS
   END COMPONENT decimal_2_ascii;
 
 
-  COMPONENT get_max IS
+  COMPONENT get_max IS                                                             -- compare current value with max register, if current > max register, then set flag_max = 1
    port(
 	clk: in std_logic;
 	max_register :in std_logic_vector(20 downto 0);
@@ -94,7 +94,7 @@ ARCHITECTURE LCD_DISPLAY_arch OF LCD_DISPLAY_nty IS
 	flag_max:out std_logic);
   END COMPONENT get_max ;
 
-  COMPONENT get_min IS
+  COMPONENT get_min IS                                                             -- compare current value with min register, if current > max register, then set flag_min = 1
    port(
 	clk: in std_logic;
 	min_register :in std_logic_vector(20 downto 0);
@@ -104,14 +104,14 @@ ARCHITECTURE LCD_DISPLAY_arch OF LCD_DISPLAY_nty IS
 
 
 
-  COMPONENT decimal_2_ascii_max IS
+  COMPONENT decimal_2_ascii_max IS                                                -- convert max temp data from decimal to ascii
    port( 
          input_d : in std_logic_vector(3 downto 0);
              clk : in std_logic;
         output_a : out std_logic_vector(7 downto 0));
   END COMPONENT decimal_2_ascii_max;
 
-  COMPONENT decimal_2_ascii_min IS
+  COMPONENT decimal_2_ascii_min IS                                                -- convert min temp data from decimal to ascii
    port( 
          input_d : in std_logic_vector(3 downto 0);
              clk : in std_logic;
@@ -129,8 +129,6 @@ BEGIN
 
 
 input_d_signal <= input_d;
-flag_max_out <= flag_max;
-flag_min_out <= flag_min;
 
 
 compare_max: get_max
@@ -147,64 +145,47 @@ compare_min: get_min
 		current_data_min => input_d_signal,
 		flag_min=> flag_min);
 
+
+
   process(clk_400hz_enable)
   variable copy_signal: integer range 0 to 1;
   begin
+
+if (rising_edge(clk_400hz_enable)) then                                               
+
+   if (reset='1') then
+       if (copy_signal=1) then                                                     -- to synchronize copy with LCD clock
+           copy <= '0';
+           copy_signal := 0;
+       else
+           copy <= '1';
+           copy_signal :=1;
+       end if ;
   
 
-  
-
-  if (rising_edge(clk_400hz_enable)) then
-
-if (reset='1') then
-  if (copy_signal=1) then
-    copy <= '0';
-    copy_signal := 0;
-  else
-    copy <= '1';
-    copy_signal :=1;
-  end if ;
-  
-	--if ((temp_max = "001011001100100010000") and (temp_min = "001011001100100010000"))then                     -- 599.10
-	--	temp_max <= "101011001100100010000";
-	--	temp_min <= "001011001100100010000";
-
- --   else
-    if (no_veto = '1') then
-		if (flag_max = '1') then
-				temp_max <= input_d_signal;
-		else
-				temp_max <= temp_max;
-		end if;
+       if (no_veto = '1') then                                                     -- the updataion will only be processed when no_veto is 1
+		    if (flag_max = '1') then                                               -- when flag_max = 1, then update the max temp
+				    temp_max <= input_d_signal;
+		    else
+				    temp_max <= temp_max;
+		    end if;
 		
-		if (flag_min ='1') then
-				temp_min <= input_d_signal;				
-		else 
-				temp_min <= temp_min;
+		    if (flag_min ='1') then                                                -- when flag_min = 1, then update the min temp
+				    temp_min <= input_d_signal;				
+		    else 
+				    temp_min <= temp_min;
 				
-		end if;	
-	end if;
+		    end if;	
+	    end if;
 	
-	else
-	temp_max <= "101011001100100010000";
-	temp_min <= "001011001100100010000";
+   else
+	temp_max <= "101011001100100010000";                                             -- when reset = 0, then we reset the max register to -599.10
+	temp_min <= "001011001100100010000";                                             -- when reset = 0, then we reset the min register to +599.10
 	end if;
     end if;
 end process;
 
 
---process(clk_400hz_enable)
---begin
-
---if (rising_edge(clk_400hz_enable)) then
---       if (flag_max = '1') then
---                 counter <= counter + 1;
---         else
---                 counter <= 0;
---       end if;
---end if;
-
---end process;
 
 
 
@@ -473,11 +454,6 @@ sign_ascii_min<= x"20" when temp_min(20)='0' else
 process(clk)
 begin
       if (rising_edge(clk)) then
-    --     if (reset = '0') then
-     --       clk_count_400hz <= x"00000";
-      --      clk_400hz_enable <= '0';
-
-         --else
             if (clk_count_400hz <= x"0F424") then         -- correct count number for LCD display: x"0F424"; x"00014" for testbench using
                    clk_count_400hz <= clk_count_400hz + 1;                                   
                    clk_400hz_enable <= '0';                
@@ -485,7 +461,6 @@ begin
                    clk_count_400hz <= x"00000";
                    clk_400hz_enable <= '1';
             end if;
-       --  end if;
       end if;
 end process;  
 
