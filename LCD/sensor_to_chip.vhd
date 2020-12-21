@@ -15,7 +15,7 @@
 -- Revision:
 -- Revision 0.01 - File Created
 -- Additional Comments:
--- 
+-- Sensor clock frequency is much higher than LCD, this component is to synchronize the clock as LCD
 ----------------------------------------------------------------------------------
 
 
