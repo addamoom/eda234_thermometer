@@ -24,7 +24,7 @@ ENTITY LCD_DISPLAY_nty IS
       no_veto            : in     std_logic;             -- enable signal from sensor_to_chip, that is turned off during copying state for a fraction of LCD clock cycle
       copy               : out    std_logic;             -- control signal to sensor_to_chip, enable the sensor_to_chip to process next signal
       
-      data_bus_0         : INOUT  STD_LOGIC;             --output databus
+      data_bus_0         : INOUT  STD_LOGIC;             -- output databus
       data_bus_1         : INOUT  STD_LOGIC;
       data_bus_2         : INOUT  STD_LOGIC;
       data_bus_3         : INOUT  STD_LOGIC;
@@ -64,12 +64,12 @@ ARCHITECTURE LCD_DISPLAY_arch OF LCD_DISPLAY_nty IS
   signal data_bus                    : STD_LOGIC_VECTOR(7 downto 0);
   signal input_d_signal              : std_logic_vector(20 downto 0);	
   
-  signal temp_max					 : std_logic_vector(20 downto 0):= "101011001100100010000";    --  -599.10 temp as the initial value for max register
-  signal temp_min					 : std_logic_vector(20 downto 0):= "001011001100100010000";    --  +599.10 temp as the initial value for max register
+  signal temp_max		     : std_logic_vector(20 downto 0):= "101011001100100010000";    --  -599.10 temp as the initial value for max register
+  signal temp_min		     : std_logic_vector(20 downto 0):= "001011001100100010000";    --  +599.10 temp as the initial value for max register
   
  
-  signal flag_max					 : std_logic:='0';                             -- when flag is 1, then we update the max temp data
-  signal flag_min					 : std_logic:='0';                             -- when flag is 1, then we update the min temp data
+  signal flag_max		     : std_logic:='0';                             -- when flag is 1, then we update the max temp data
+  signal flag_min		     : std_logic:='0';                             -- when flag is 1, then we update the min temp data
   
   signal sign_ascii_max              : std_logic_vector(7 downto 0);               -- ascii format data of max temp's sign bit
   signal sign_ascii_min              : std_logic_vector(7 downto 0);               -- ascii format data of min temp's sign bit
@@ -164,13 +164,13 @@ if (rising_edge(clk_400hz_enable)) then
   
 
        if (no_veto = '1') then                                                     -- the updataion will only be processed when no_veto is 1
-		    if (flag_max = '1') then                                               -- when flag_max = 1, then update the max temp
+		    if (flag_max = '1') then                                       -- when flag_max = 1, then update the max temp
 				    temp_max <= input_d_signal;
 		    else
 				    temp_max <= temp_max;
 		    end if;
 		
-		    if (flag_min ='1') then                                                -- when flag_min = 1, then update the min temp
+		    if (flag_min ='1') then                                        -- when flag_min = 1, then update the min temp
 				    temp_min <= input_d_signal;				
 		    else 
 				    temp_min <= temp_min;
