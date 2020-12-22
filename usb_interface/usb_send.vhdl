@@ -1,9 +1,11 @@
 -- Written By Ivar
 
--- Takes in 5 ASCII values and send them over UART USB
+-- Takes in 5 ASCII values (XXXXX) and send them over UART USB
 -- to computer, PUTTY used to check.
 -- Sending when selected.
--- Writing TEMP: XXX:XX /newline
+-- Writing TEMP IND.: XXX.XX /newline
+
+-- Can't view negative numbers, Indoor temp. assumed to always be positive
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -15,11 +17,7 @@ entity USB_send is
         UART_TXD    : out STD_LOGIC; -- Line in board
         USB_select  : in STD_LOGIC;
         USB_done    : out STD_LOGIC;
-        USB_s_data  : in STD_LOGIC_VECTOR(39 downto 0); -- 5 ascii values
-        
-        test_state : out STD_LOGIC_VECTOR(3 downto 0)--;
-        --test_RESETN : out STD_LOGIC 
-        
+        USB_s_data  : in STD_LOGIC_VECTOR(39 downto 0) -- 5 ascii values
     );
 end USB_send;
 
@@ -63,11 +61,9 @@ signal sendStr          : CHAR_ARRAY(0 to (message_len-1));
 
 --signal strindex_sign    : integer := 0;
 signal selected         : STD_LOGIC := '0';
-signal USB_done_sign    : STD_LOGIC := '0';
+--signal USB_done_sign    : STD_LOGIC := '0';
 
 begin
-
-USB_done <= USB_done_sign;
 
 -- Sending bytes over UART line:
 UART_TX_CTRL: ctrl_uart_tx port map(
@@ -103,25 +99,24 @@ sendStr(0 to (message_len-1)) <= (
 );
 
 uart_state_process : process (CLK)
-variable strindex : integer := 0;
+variable strindex : integer := 0; -- Keep track which byte to send
 begin
-    --strindex_sign <= strindex; --
+
     if RESET_N = '0' then -- Error if inverting if statement
         uart_state <= wait_select;
-        --test_state <= "0000";
+        
     else
-        --test_state <= "1111";
         if rising_edge(CLK) then
             case uart_state is
             when wait_select =>
-                --test_state <= b"0001";
-                if USB_select = '1' then
+                if USB_select = '1' then -- START
                     -- Set only value to transmit when selected!
                     USB_s_data_latest <= USB_s_data; 
                     uart_state <= wait_rdy;
-                    
                 end if;
                 sendUART <= '0';
+                USB_done <= '0'; 
+                
             when wait_rdy => -- Wait until ctrl_UART rdy
                 if readyUART = '0' then
                     uart_state <= wait_rdy; 
@@ -129,14 +124,11 @@ begin
                     uart_state <= send_char;
                 end if;
                 strindex := 0;
-                sendUART <= '0';
-                USB_done_sign <= '0';
-                --test_state <= b"0010";
+
             when send_char =>
-                --test_state <= b"0011";
                 if strindex = message_len then
                     uart_state <= wait_select; -- Finished with full word!
-                    USB_done_sign <= '1';
+                    USB_done <= '1';
                 else
                     sendUART <= '1';
                     dataUART <= sendStr(strindex);
@@ -145,7 +137,6 @@ begin
                 end if;
 
             when wait_rdy_low =>
-                --test_state <= b"0100";
                 if readyUART = '0' then
                     uart_state <= wait_char_rdy;
                 else
@@ -153,7 +144,6 @@ begin
                 end if;
 
             when wait_char_rdy =>
-                --test_state <= b"0101";
                 if (readyUART = '1') then
                     uart_state <= send_char;
                 else
@@ -162,10 +152,9 @@ begin
                 sendUART <= '0';
             
             when others => -- Should never happen
-                --test_state <= b"0110";
-                --uart_state <= wait_select;
+                uart_state <= wait_select;
             end case; 
-        end if;
+        end if; -- Rising edge CLK
     end if; -- RESETN
 end process uart_state_process;
 
