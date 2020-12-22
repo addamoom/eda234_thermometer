@@ -1,3 +1,6 @@
+-- Top module for the whole system
+-- Written By Adam Stenseke
+
 LIBRARY IEEE;
 USE IEEE.STD_LOGIC_1164.ALL;
 USE IEEE.STD_LOGIC_ARITH.ALL;
@@ -10,7 +13,7 @@ ENTITY toplevel IS
         BTNL                : IN STD_LOGIC;    -- Reset button
         BTNR                : IN STD_LOGIC;    -- Toggles displays
         CLK100MHZ           : IN STD_LOGIC;    -- 100MHZ clock
-        Toggle_minmax       : IN STD_LOGIC;    -- Toggle Lcd mode. 0 - display current temp, 1 - display new temp
+        Toggle_minmax       : IN STD_LOGIC;    -- Toggle Lcd mode. 0 - display current temp, 1 - display new temp. Connect to switch
         SDA                 : INOUT STD_LOGIC; -- Temp Sensor I2C data 
         SCL                 : OUT STD_LOGIC;   -- Temp Sensor I2C clock
         
@@ -26,10 +29,12 @@ ENTITY toplevel IS
         toplevel_data_bus_6 : INOUT STD_LOGIC; -- LCD connection
         toplevel_data_bus_7 : INOUT STD_LOGIC; -- LCD connection
 
-        data_433            : IN STD_LOGIC;  -- Data pin on 433 receiver
+        data_433            : IN STD_LOGIC;  	-- Data pin on 433 receiver
+		
+		UART_TXD : OUT STD_LOGIC;				-- Data pin for USB communication
         
-        AN : OUT STD_LOGIC_VECTOR (7 downto 0);
-        SEG : OUT STD_LOGIC_VECTOR (7 downto 0)
+        AN : OUT STD_LOGIC_VECTOR (7 downto 0); -- Hex display anode lines
+        SEG : OUT STD_LOGIC_VECTOR (7 downto 0) -- Hex display Segment lines
 
     );
 END toplevel;
@@ -139,9 +144,29 @@ ARCHITECTURE arc_toplevel OF toplevel IS
         Toggle           : IN STD_LOGIC;                     -- switch output between the two inputs
         Temp_to_lcd      : OUT STD_LOGIC_VECTOR(20 DOWNTO 0) -- Temperature output to lcd
     );
-END COMPONENT temp_switcher;
+    END COMPONENT temp_switcher;
+	
+	COMPONENT USB_send is
+    port(
+        CLK         : in STD_LOGIC;
+        RESET_N     : in STD_LOGIC;
+        UART_TXD    : out STD_LOGIC; -- Line in board
+        USB_select  : in STD_LOGIC;
+        USB_done    : out STD_LOGIC;
+        USB_s_data  : in STD_LOGIC_VECTOR(39 downto 0) -- 5 ascii values
+    );
+	END COMPONENT USB_send;
+	
+	component decimal_2_ascii is
+        port(
+            input_d : in std_logic_vector(3 downto 0);
+                clk : in std_logic;
+           output_a : out std_logic_vector(7 downto 0));
+    end component;
+	
 SIGNAL temp_to_lcd_after : STD_LOGIC_VECTOR(20 DOWNTO 0);
-SIGNAL copy, no_veto : STD_LOGIC;
+SIGNAL copy, no_veto,Usb_trigger_signal : STD_LOGIC;
+SIGNAL temp_ascii_to_usb : STD_LOGIC_VECTOR(39 DOWNTO 0);
 
 BEGIN
 
@@ -220,12 +245,67 @@ BEGIN
         Temp_to_lcd      => temp_to_lcd
     );
     
-        hexdisp : main PORT MAP(
-               AN  => AN,
-               SEG => SEG,
-               CLK100MHZ => CLK100MHZ,
-               temp_in => temp_to_lcd,
-               CPU_RESETN =>Reset_n
-        );
+    hexdisp : main PORT MAP(
+           AN  => AN,
+           SEG => SEG,
+           CLK100MHZ => CLK100MHZ,
+           temp_in => temp_to_lcd,
+           CPU_RESETN =>Reset_n
+    );
+	
+	usb_transmitter: usb_send PORT MAP(
+	CLK          => CLK100MHZ,
+	RESET_N      => Reset_n,
+	UART_TXD     => UART_TXD,
+	USB_select   => Usb_trigger_signal,
+	USB_done     => OPEN,
+	USB_s_data   => temp_ascii_to_usb
+	);
+	
+	D2A0 : decimal_2_ascii port map (
+                input_d => temp_indoor(3 downto 0),
+                clk => CLK100MHZ, 
+                output_a => temp_ascii_to_usb(7 downto 0) 
+                );
+                
+    D2A1 : decimal_2_ascii port map (
+            input_d => temp_indoor(7 downto 4),
+            clk => CLK100MHZ, 
+            output_a => temp_ascii_to_usb(15 downto 8) 
+            );
+            
+    D2A2 : decimal_2_ascii port map (
+            input_d => temp_indoor(11 downto 8),
+            clk => CLK100MHZ, 
+            output_a => temp_ascii_to_usb(23 downto 16) 
+            );
+            
+    D2A3 : decimal_2_ascii port map (
+            input_d => temp_indoor(15 downto 12),
+            clk => CLK100MHZ, 
+            output_a => temp_ascii_to_usb(31 downto 24) 
+            );
+            
+    D2A4 : decimal_2_ascii port map (
+            input_d => temp_indoor(19 downto 16),
+            clk => CLK100MHZ, 
+            output_a => temp_ascii_to_usb(39 downto 32) 
+            );
+	
+	
+	
+	
+	
+	-- Generates pulses 1s apart to trigger sending data over USB
+	d1hz : freq_divisor GENERIC MAP(N => 100000000) 
+    PORT MAP
+    (
+        clk     => CLK100MHZ,
+        reset_n => Reset_n,
+        clk_out => Usb_trigger_signal
+    );
+	
+	
+	
 
 END arc_toplevel;

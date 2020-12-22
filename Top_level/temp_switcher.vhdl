@@ -1,5 +1,6 @@
 -- This component debounces a button press and uses it to
 -- to toggle between outputting one of the two inputs.
+-- Written By Adam Stenseke
 
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
@@ -11,7 +12,7 @@ ENTITY temp_switcher IS
         interal_temp_in  : IN STD_LOGIC_VECTOR(20 DOWNTO 0);  -- 
         External_temp_in : IN STD_LOGIC_VECTOR(20 DOWNTO 0);  --
         Toggle           : IN STD_LOGIC;                      -- switch output between the two inputs
-        Temp_to_lcd      : OUT STD_LOGIC_VECTOR(20 DOWNTO 0)  -- Temperature output to lcd
+        Temp_to_lcd      : OUT STD_LOGIC_VECTOR(20 DOWNTO 0)  -- Temperature output to lcd (and recently other components)
     );
 
 END temp_switcher;
@@ -30,7 +31,7 @@ BEGIN
             state <= wait_for_high;
         ELSIF rising_edge(Clk) THEN
             case state is
-                when wait_for_high =>
+                when wait_for_high =>     
                     if Toggle = '1' then
                       state <= debounce ;
                       internal_toggle <= NOT internal_toggle;

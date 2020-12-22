@@ -7,14 +7,14 @@
 --      The transaction is initialized by sending a 1.
 --      The one is followed by a key, that is used to filter out transmissions and noise on the 433Mhz band not meant for this device
 --      The key is 4 bits long, set to "1101"
---      After the key the 20 bit message is received. message has the form: "sddd.dd" s - sign, d - 4 bit digit, . just signifies whre to put the . in the final number
+--      After the key the 20 bit message is received. message has the form: "sddd.dd" s - sign, d - 4 bit digit, . just signifies where to put the . in the final number
 --      A typical transmission may therefore look something like this:
 --      "11101000000000000000100000"
 --       |start bit
 --        |  |key
 --            |              |message
 --            
--- T
+-- Written By Adam Stenseke
 --     
 LIBRARY ieee;
 USE ieee.std_logic_1164.ALL;
