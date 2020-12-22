@@ -14,7 +14,7 @@ ENTITY LCD_DISPLAY_nty IS
       reset              : IN     std_logic;  
       clk                : IN     std_logic;             -- to Genreate the 400Hz signal, clk_count_400hz reset count value: x"0F424" (62500)   x"1E848"--- (125000), x"3D090" ---(250000) for 100Mhz 
       input_d            : IN     std_logic_vector(20 downto 0);              -- input temp data
-      switch_1           : IN     std_logic;             --when switch_1 = 1, sdisplay the max/min temp
+      switch_1           : IN     std_logic;             --when switch_1 = 1, display the max/min temp
 
       lcd_rs             : OUT    std_logic;
       lcd_e              : OUT    std_logic;
@@ -94,7 +94,7 @@ ARCHITECTURE LCD_DISPLAY_arch OF LCD_DISPLAY_nty IS
 	flag_max:out std_logic);
   END COMPONENT get_max ;
 
-  COMPONENT get_min IS                                                             -- compare current value with min register, if current > max register, then set flag_min = 1
+  COMPONENT get_min IS                                                             -- compare current value with min register, if current < min register, then set flag_min = 1
    port(
 	clk: in std_logic;
 	min_register :in std_logic_vector(20 downto 0);
