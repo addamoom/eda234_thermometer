@@ -1,35 +1,11 @@
-----------------------------------------------------------------------------------
--- Company: 
--- Engineer: 
--- 
--- Create Date: 12/20/2020 07:31:11 PM
--- Design Name: 
--- Module Name: sensor_to_chip - Behavioral
--- Project Name: 
--- Target Devices: 
--- Tool Versions: 
--- Description: 
--- 
--- Dependencies: 
--- 
--- Revision:
--- Revision 0.01 - File Created
--- Additional Comments:
+-----------------------------------------------------------------------------------------------------
 -- Sensor clock frequency is much higher than LCD, this component is to synchronize the clock as LCD
-----------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------
 
 
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
 
--- Uncomment the following library declaration if using
--- arithmetic functions with Signed or Unsigned values
---use IEEE.NUMERIC_STD.ALL;
-
--- Uncomment the following library declaration if instantiating
--- any Xilinx leaf cells in this code.
---library UNISIM;
---use UNISIM.VComponents.all;
 
 entity sensor_to_chip is
    PORT( 
@@ -37,7 +13,7 @@ entity sensor_to_chip is
       input_d            : IN     std_logic_vector(20 downto 0); -- sensor input
       copy               : IN     std_logic;                     -- functions as state machine clock from LCD code
       output_d           : OUT     std_logic_vector(20 downto 0); -- copied input that will be static while checked and displayed until copy cycle complete
-      no_veto           : OUT     std_logic                      -- enable signal that is turned off during copying state for a fraction of LCD clock cycle
+      no_veto            : OUT     std_logic                      -- enable signal that is turned off during copying state for a fraction of LCD clock cycle
       );
 end sensor_to_chip;
 
@@ -56,7 +32,7 @@ if rising_edge(clk) then
 
 case state is
 
-    when copy_state => -- this is extremely ugly code but i don't know if a for loop would synthesize the same
+    when copy_state => -- this is extremely ugly code but we don't know if a for loop would synthesize the same
         if(input_d(0)='1') then
             output_d(0) <= '1';
             else
