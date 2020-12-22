@@ -89,11 +89,11 @@ begin
          case sign_combination is
    
               when "01" =>               -- current_data > 0, register_data < 0, so current_data > register_data
-              flag_min <= '0';           -- max_register <= current_data
+              flag_min <= '0';           -- min_register <= register_data
 
 
               when "10" =>               -- current_data < 0, register_data > 0, so current_data < register_data
-              flag_min <= '1';           -- max_register <= max_register
+              flag_min <= '1';           -- min_register <= current_data
 		enabled:=1;
 
               when "11" =>               -- current_data < 0, register_data < 0
