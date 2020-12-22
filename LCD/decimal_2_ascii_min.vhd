@@ -1,6 +1,6 @@
 -------------------------------------------------------
 -------------------------------------------------------
----- decimal to ascii conversion-----------------------
+---- decimal to ascii conversion for min temp-----------------------
 ----input: 4-bit vector in unsigned decimal format-----
 ----output: 8-bit vector in ascii format---------------
 -------------------------------------------------------
